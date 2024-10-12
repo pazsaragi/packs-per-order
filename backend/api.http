@@ -1,0 +1,10 @@
+@host = http://localhost:8080
+
+GET {{host}}/health-check
+
+### Pack Generator
+# GET {{host}}/pack?order=251
+# GET {{host}}/pack?order=501
+# GET {{host}}/pack?order=751
+# GET {{host}}/pack?order=2001
+# GET {{host}}/pack?order=120001
