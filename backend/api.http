@@ -1,10 +1,13 @@
-@host = http://localhost:8080
+# @host = http://localhost:8080
+@host = https://packs-per-order.onrender.com
 
 GET {{host}}/health-check
 
 ### Pack Generator
-# GET {{host}}/pack?order=251
+GET {{host}}/pack?order=251
 # GET {{host}}/pack?order=501
 # GET {{host}}/pack?order=751
 # GET {{host}}/pack?order=2001
-# GET {{host}}/pack?order=120001
+
+### Pack Generator - large case
+GET {{host}}/pack?order=120001
