@@ -59,24 +59,22 @@ func (p *BacktrackingMemoStrategy) FindIdealPack(order int) strategy.PackResult 
 		baseCombination[i] = largestSize
 	}
 
-	allCombinations := [][]int{}
-	p.findCombinationsHelper(remainingOrder, []int{}, &allCombinations)
-
 	var bestCombination []int
 	minTotalItems := int(^uint(0) >> 1) // Max int value
 	minPackCount := len(p.packSizes)    // Initialize with worst case
 
+	allCombinations := [][]int{}
+	p.findCombinationsHelper(remainingOrder, []int{}, &allCombinations, &minTotalItems, &minPackCount)
+
 	for _, combination := range allCombinations {
 		finalCombo := append(baseCombination, combination...)
-		totalItems := sum(finalCombo)
-		packCount := len(finalCombo)
+		totalItems := sum(combination)
+		packCount := len(combination)
 
 		// if the current combination items is less than or equal to the current minimum
 		// and the number of packs is less, then update the best combination
-		if totalItems < minTotalItems || (totalItems == minTotalItems && packCount < minPackCount) {
+		if totalItems == minTotalItems && packCount == minPackCount {
 			bestCombination = finalCombo
-			minTotalItems = totalItems
-			minPackCount = packCount
 		}
 	}
 
@@ -112,12 +110,27 @@ This helper uses backtracking to find all combinations of pack sizes for a given
 TODO: can we prune the results to avoid calculating combinations for combinations than
 have more items and more packs than the current best candidate.
 */
-func (p *BacktrackingMemoStrategy) findCombinationsHelper(remainingOrder int, currentCombination []int, allCombinations *[][]int) {
+func (p *BacktrackingMemoStrategy) findCombinationsHelper(remainingOrder int, currentCombination []int, allCombinations *[][]int, minTotalItems *int, minPackCount *int) {
+
+	if len(currentCombination) > *minPackCount {
+		return
+	}
+
+	if sum(currentCombination) > *minTotalItems {
+		return
+	}
+
 	if remainingOrder <= 0 {
 		// If the order is exactly fulfilled, record the current combination
 		combinationCopy := make([]int, len(currentCombination))
 		copy(combinationCopy, currentCombination)
 		*allCombinations = append(*allCombinations, combinationCopy)
+		if len(currentCombination) < *minPackCount {
+			*minPackCount = len(currentCombination)
+		}
+		if sum(currentCombination) < *minTotalItems {
+			*minTotalItems = sum(currentCombination)
+		}
 		return
 	}
 
@@ -125,7 +138,7 @@ func (p *BacktrackingMemoStrategy) findCombinationsHelper(remainingOrder int, cu
 	for _, packSize := range p.packSizes {
 		// Add the current pack size to the combination and recurse
 		currentCombination = append(currentCombination, packSize)
-		p.findCombinationsHelper(remainingOrder-packSize, currentCombination, allCombinations)
+		p.findCombinationsHelper(remainingOrder-packSize, currentCombination, allCombinations, minTotalItems, minPackCount)
 		// Backtrack
 		currentCombination = currentCombination[:len(currentCombination)-1]
 	}
